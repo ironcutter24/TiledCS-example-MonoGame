@@ -17,6 +17,8 @@ namespace TiledCS_example_MonoGame
         private Dictionary<int, TiledTileset> tilesets;
         private Texture2D tilesetTexture;
 
+        const int scaleFactor = 3;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -61,7 +63,7 @@ namespace TiledCS_example_MonoGame
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp);  // Set samplerState to null to work with high res assets
 
             var tileLayers = map.Layers.Where(x => x.type == TiledLayerType.TileLayer);
 
@@ -92,12 +94,24 @@ namespace TiledCS_example_MonoGame
                         // Use the connection object as well as the tileset to figure out the source rectangle
                         var rect = map.GetSourceRect(mapTileset, tileset, gid);
 
+                        // You can use the helper methods to get useful information to generate maps
+                        SpriteEffects effects = SpriteEffects.None;
+                        if (map.IsTileFlippedHorizontal(layer, x, y))
+                        {
+                            effects = SpriteEffects.FlipHorizontally;
+                        }
+                        if (map.IsTileFlippedVertical(layer, x, y))
+                        {
+                            effects = SpriteEffects.FlipVertically;
+                        }
+
                         // Create destination and source rectangles
                         var source = new Rectangle(rect.x, rect.y, rect.width, rect.height);
                         var destination = new Rectangle(tileX, tileY, map.TileWidth, map.TileHeight);
+                        destination = ScaleRect(destination, scaleFactor);
 
                         // Render sprite at position tileX, tileY using the rect
-                        _spriteBatch.Draw(tilesetTexture, destination, source, Color.White);
+                        _spriteBatch.Draw(tilesetTexture, destination, source, Color.White, 0f, Vector2.Zero, effects, 0);
                     }
                 }
             }
@@ -105,6 +119,11 @@ namespace TiledCS_example_MonoGame
             _spriteBatch.End();
 
             base.Draw(gameTime);
+
+            Rectangle ScaleRect(Rectangle rect, int scaleFactor)
+            {
+                return new Rectangle(rect.X * scaleFactor, rect.Y * scaleFactor, rect.Width * scaleFactor, rect.Height * scaleFactor);
+            }
         }
     }
 }
