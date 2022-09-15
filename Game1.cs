@@ -94,21 +94,21 @@ namespace TiledCS_example_MonoGame
                         // Use the connection object as well as the tileset to figure out the source rectangle
                         var rect = map.GetSourceRect(mapTileset, tileset, gid);
 
-                        // You can use the helper methods to get useful information to generate maps
-                        SpriteEffects effects = SpriteEffects.None;
-                        if (map.IsTileFlippedHorizontal(layer, x, y))
-                        {
-                            effects = SpriteEffects.FlipHorizontally;
-                        }
-                        if (map.IsTileFlippedVertical(layer, x, y))
-                        {
-                            effects = SpriteEffects.FlipVertically;
-                        }
-
                         // Create destination and source rectangles
                         var source = new Rectangle(rect.x, rect.y, rect.width, rect.height);
                         var destination = new Rectangle(tileX, tileY, map.TileWidth, map.TileHeight);
                         destination = ScaleRect(destination, scaleFactor);
+
+                        // You can use the helper methods to get useful information to generate maps
+                        SpriteEffects effects = SpriteEffects.None;
+                        if (map.IsTileFlippedHorizontal(layer, x, y))
+                        {
+                            effects |= SpriteEffects.FlipHorizontally;
+                        }
+                        if (map.IsTileFlippedVertical(layer, x, y))
+                        {
+                            effects |= SpriteEffects.FlipVertically;
+                        }
 
                         // Render sprite at position tileX, tileY using the rect
                         _spriteBatch.Draw(tilesetTexture, destination, source, Color.White, 0f, Vector2.Zero, effects, 0);
