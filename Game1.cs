@@ -16,8 +16,12 @@ namespace TiledCS_example_MonoGame
         private TiledMap map;
         private Dictionary<int, TiledTileset> tilesets;
         private Texture2D tilesetTexture;
+        private TiledLayer collisionLayer;
+
+        private Rectangle? debugRect;
 
         const int scaleFactor = 3;
+        private Matrix transformMatrix;
 
         public Game1()
         {
@@ -29,6 +33,8 @@ namespace TiledCS_example_MonoGame
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
+
+            transformMatrix = Matrix.CreateScale(scaleFactor, scaleFactor, 1f);
 
             base.Initialize();
         }
@@ -46,6 +52,9 @@ namespace TiledCS_example_MonoGame
             // the image file with "Content.mgcb"
             tilesetTexture = Content.Load<Texture2D>("cavesofgallet_tiles");
 
+            // Retrieving objects or layers can be done using Linq or a for loop
+            collisionLayer = map.Layers.First(l => l.name == "Ground");
+
             // TODO: use this.Content to load your game content here
         }
 
@@ -53,6 +62,20 @@ namespace TiledCS_example_MonoGame
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            // Get mouse position on screen
+            var mousePos = Mouse.GetState().Position.ToVector2();
+
+            // Check if mouse is in the bounds of a Tiled object
+            debugRect = null;
+            foreach (var obj in collisionLayer.objects)
+            {
+                var objRect = new Rectangle((int)obj.x, (int)obj.y, (int)obj.width, (int)obj.height);
+                if (objRect.Contains(mousePos / scaleFactor))
+                {
+                    debugRect = objRect;
+                }
+            }
 
             // TODO: Add your update logic here
 
@@ -63,7 +86,7 @@ namespace TiledCS_example_MonoGame
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            _spriteBatch.Begin(samplerState: SamplerState.PointClamp);  // Set samplerState to null to work with high res assets
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: transformMatrix);  // Set samplerState to null to work with high res assets
 
             var tileLayers = map.Layers.Where(x => x.type == TiledLayerType.TileLayer);
 
@@ -97,7 +120,6 @@ namespace TiledCS_example_MonoGame
                         // Create destination and source rectangles
                         var source = new Rectangle(rect.x, rect.y, rect.width, rect.height);
                         var destination = new Rectangle(tileX, tileY, map.TileWidth, map.TileHeight);
-                        destination = ScaleRect(destination, scaleFactor);
 
                         // You can use the helper methods to get useful information to generate maps
                         SpriteEffects effects = SpriteEffects.None;
@@ -116,14 +138,18 @@ namespace TiledCS_example_MonoGame
                 }
             }
 
+            // If mouse is over a collider, display its bounds
+            if (debugRect != null)
+            {
+                Texture2D _texture = new Texture2D(GraphicsDevice, 1, 1);
+                _texture.SetData(new Color[] { Color.Green });
+
+                _spriteBatch.Draw(_texture, (Rectangle)debugRect, Color.White);
+            }
+
             _spriteBatch.End();
 
             base.Draw(gameTime);
-
-            Rectangle ScaleRect(Rectangle rect, int scaleFactor)
-            {
-                return new Rectangle(rect.X * scaleFactor, rect.Y * scaleFactor, rect.Width * scaleFactor, rect.Height * scaleFactor);
-            }
         }
     }
 }
