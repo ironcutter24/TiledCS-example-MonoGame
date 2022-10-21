@@ -23,6 +23,21 @@ namespace TiledCS_example_MonoGame
         const int scaleFactor = 3;
         private Matrix transformMatrix;
 
+        [Flags]
+        enum XFRM
+        {
+            None = 0,
+            Horizontal = 1 << 0,
+            Vertical = 1 << 1,
+            Diagonal = 1 << 2,
+
+            Rotate90 = Diagonal | Horizontal,
+            Rotate180 = Horizontal | Vertical,
+            Rotate270 = Vertical | Diagonal,
+
+            VerticalAndRotate90 = Horizontal | Vertical | Diagonal,
+        }
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -121,19 +136,51 @@ namespace TiledCS_example_MonoGame
                         var source = new Rectangle(rect.x, rect.y, rect.width, rect.height);
                         var destination = new Rectangle(tileX, tileY, map.TileWidth, map.TileHeight);
 
+
                         // You can use the helper methods to get useful information to generate maps
+                        XFRM tileTrs = XFRM.None;
+                        if (map.IsTileFlippedHorizontal(layer, x, y)) tileTrs |= XFRM.Horizontal;
+                        if (map.IsTileFlippedVertical(layer, x, y)) tileTrs |= XFRM.Vertical;
+                        if (map.IsTileFlippedDiagonal(layer, x, y)) tileTrs |= XFRM.Diagonal;
+
+                        //tileTrs = XFRM.VerticalAndRotate90;
+
                         SpriteEffects effects = SpriteEffects.None;
-                        if (map.IsTileFlippedHorizontal(layer, x, y))
+                        double rotation = 0f;
+                        switch (tileTrs)
                         {
-                            effects |= SpriteEffects.FlipHorizontally;
-                        }
-                        if (map.IsTileFlippedVertical(layer, x, y))
-                        {
-                            effects |= SpriteEffects.FlipVertically;
+                            case XFRM.Horizontal:   effects = SpriteEffects.FlipHorizontally;   break;
+                            case XFRM.Vertical:     effects = SpriteEffects.FlipVertically;     break;
+
+                            case XFRM.Rotate90:
+                                rotation = Math.PI * .5f;
+                                destination.X += map.TileWidth;
+                                break;
+
+                            case XFRM.Rotate180:
+                                rotation = Math.PI;
+                                destination.X += map.TileWidth;
+                                destination.Y += map.TileHeight;
+                                break;
+
+                            case XFRM.Rotate270:
+                                rotation = Math.PI * 3 / 2;
+                                destination.Y += map.TileHeight;
+                                break;
+
+                            case XFRM.VerticalAndRotate90:
+                                effects = SpriteEffects.FlipVertically;
+                                rotation = Math.PI * .5f;
+                                destination.X += map.TileWidth;
+                                break;
+
+                            default:
+                                break;
                         }
 
+
                         // Render sprite at position tileX, tileY using the rect
-                        _spriteBatch.Draw(tilesetTexture, destination, source, Color.White, 0f, Vector2.Zero, effects, 0);
+                        _spriteBatch.Draw(tilesetTexture, destination, source, Color.White, (float)rotation, Vector2.Zero, effects, 0);
                     }
                 }
             }
