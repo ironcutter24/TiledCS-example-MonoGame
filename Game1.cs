@@ -24,18 +24,18 @@ namespace TiledCS_example_MonoGame
         private Matrix transformMatrix;
 
         [Flags]
-        enum XFRM
+        enum Trans
         {
             None = 0,
-            Horizontal = 1 << 0,
-            Vertical = 1 << 1,
-            Diagonal = 1 << 2,
+            Flip_H = 1 << 0,
+            Flip_V = 1 << 1,
+            Flip_D = 1 << 2,
 
-            Rotate90 = Diagonal | Horizontal,
-            Rotate180 = Horizontal | Vertical,
-            Rotate270 = Vertical | Diagonal,
+            Rotate_90 = Flip_D | Flip_H,
+            Rotate_180 = Flip_H | Flip_V,
+            Rotate_270 = Flip_V | Flip_D,
 
-            VerticalAndRotate90 = Horizontal | Vertical | Diagonal,
+            Rotate_90AndFlip_H = Flip_H | Flip_V | Flip_D,
         }
 
         public Game1()
@@ -137,39 +137,37 @@ namespace TiledCS_example_MonoGame
                         var destination = new Rectangle(tileX, tileY, map.TileWidth, map.TileHeight);
 
 
-                        // You can use the helper methods to get useful information to generate maps
-                        XFRM tileTrs = XFRM.None;
-                        if (map.IsTileFlippedHorizontal(layer, x, y)) tileTrs |= XFRM.Horizontal;
-                        if (map.IsTileFlippedVertical(layer, x, y)) tileTrs |= XFRM.Vertical;
-                        if (map.IsTileFlippedDiagonal(layer, x, y)) tileTrs |= XFRM.Diagonal;
-
-                        //tileTrs = XFRM.VerticalAndRotate90;
+                        // You can use the helper methods to get information to handle flips and rotations
+                        Trans tileTrans = Trans.None;
+                        if (map.IsTileFlippedHorizontal(layer, x, y)) tileTrans |= Trans.Flip_H;
+                        if (map.IsTileFlippedVertical(layer, x, y)) tileTrans |= Trans.Flip_V;
+                        if (map.IsTileFlippedDiagonal(layer, x, y)) tileTrans |= Trans.Flip_D;
 
                         SpriteEffects effects = SpriteEffects.None;
                         double rotation = 0f;
-                        switch (tileTrs)
+                        switch (tileTrans)
                         {
-                            case XFRM.Horizontal:   effects = SpriteEffects.FlipHorizontally;   break;
-                            case XFRM.Vertical:     effects = SpriteEffects.FlipVertically;     break;
+                            case Trans.Flip_H: effects = SpriteEffects.FlipHorizontally; break;
+                            case Trans.Flip_V: effects = SpriteEffects.FlipVertically; break;
 
-                            case XFRM.Rotate90:
+                            case Trans.Rotate_90:
                                 rotation = Math.PI * .5f;
                                 destination.X += map.TileWidth;
                                 break;
 
-                            case XFRM.Rotate180:
+                            case Trans.Rotate_180:
                                 rotation = Math.PI;
                                 destination.X += map.TileWidth;
                                 destination.Y += map.TileHeight;
                                 break;
 
-                            case XFRM.Rotate270:
+                            case Trans.Rotate_270:
                                 rotation = Math.PI * 3 / 2;
                                 destination.Y += map.TileHeight;
                                 break;
 
-                            case XFRM.VerticalAndRotate90:
-                                effects = SpriteEffects.FlipVertically;
+                            case Trans.Rotate_90AndFlip_H:
+                                effects = SpriteEffects.FlipHorizontally;
                                 rotation = Math.PI * .5f;
                                 destination.X += map.TileWidth;
                                 break;
